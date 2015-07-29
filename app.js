@@ -91,6 +91,7 @@ function outputPatch(content) {
     });
 }
 
+
 co(function* () {
     return yield getSvnLog(cfg.command);
 })
