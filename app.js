@@ -2,11 +2,19 @@ var exec = require('child_process').exec;
 var fs = require('fs');
 var co = require('co');
 var cheerio = require('cheerio');
+var colors = require('colors');
 var cfg = require('./config');
 var pathReg = cfg.pathReg;
 var replaceTo = cfg.replaceTo;
 var results = [];
 var $ = null;
+
+colors.setTheme({
+    error: 'red',
+    warn: 'yellow',
+    info: 'cyan',
+    success: 'green'
+});
 
 /**
  * 获取SVN日志记录
@@ -23,7 +31,7 @@ function getSvnLog(command) {
 }
 
 /**
- * 讲内容转包装成$对象
+ * 将内容包装到$对象
  * @param  {String} content 日志XML内容
  * @return {Object}         $ 对象
  */
@@ -43,7 +51,7 @@ function toJqueryLike(content) {
 function findLogsByUser(user) {
     var logs = $('author').map(function(index, ele) {
         var $this = $(this);
-        if ($this.text() === user) return $this.parent();
+        if ( $this.text() === user ) return $this.parent();
     }).get();
     return logs;
 }
@@ -54,6 +62,10 @@ function findLogsByUser(user) {
  * @return {String}      patch邮件内容
  */
 function parseToMailContent(logs) {
+    if (!logs) {
+        throw new Error('没有待处理的日志内容......');
+        return false;
+    }
     var results = [];
     logs.forEach(function(log, index, logs) {
         // patch的标题
@@ -64,9 +76,11 @@ function parseToMailContent(logs) {
             // 路径替换
             if ( pathReg.p.test(path) ) {  // 个人
                 path = path.replace(pathReg.p, replaceTo.p);
-            } else if ( pathReg.c.test(path) ) {  // 企业
+            }
+            if ( pathReg.c.test(path) ) {  // 企业
                 path = path.replace(pathReg.c, replaceTo.c);
-            } else if ( pathReg.w.test(path) ) {  // 维护
+            }
+            if ( pathReg.w.test(path) ) {  // 维护
                 path = path.replace(pathReg.w, replaceTo.w);
             }
             return path + '\n';
@@ -93,20 +107,24 @@ function outputPatch(content) {
 
 
 co(function* () {
+    console.log('正在向 SVN 服务器获取日志记录......'.info);
     return yield getSvnLog(cfg.command);
 })
 .then(function(content) {
+    console.log('日志获取成功......'.success);
+    console.log('开始处理数据......'.info);
     $ = toJqueryLike(content);
     var logs = findLogsByUser(cfg.user);
     var commitsCnt = parseToMailContent(logs);
-    return commitsCnt ? Promise.resolve(commitsCnt) : Promise.reject(new Error('Failed to parsing logs to mail content.'));
+    return Promise.resolve(commitsCnt);
 })
 .then(function(content) {
+    console.log('正在输出邮件内容......'.info);
     outputPatch(content);
 })
 .then(function() {
-    console.log('Done!');
+    console.log('任务完成！'.success);
 })
 .catch(function(err) {
-    console.error(err.stack);
+    console.log(String(err.stack).error);
 });
