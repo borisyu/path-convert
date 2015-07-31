@@ -5,7 +5,7 @@ __描述：__开发环境下需要打包提交的文件路径转换成生产环�
 npm install
 ```
 ### 使用
-1. 在当前目录下新建配置文件 config.js
+1.在当前目录下新建配置文件 config.js
 ```js
 {
     command: '',   // svn log 命令
@@ -14,8 +14,8 @@ npm install
     replaceTo: {}  // 替换路径
 }
 ```
-2. 运行工具
+2.运行工具
 ```js
 node --harmony app.js
 ```
-__代码用到 ES6 的新增特性 ___Generator___，因此启动程序时需要新增___--harmony___参数__
+__代码用到 ES6 的新增特性 *Generator*，因此启动程序时需要新增*--harmony*参数__
