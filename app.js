@@ -9,6 +9,7 @@ var replaceTo = cfg.replaceTo;
 var results = [];
 var $ = null;
 
+// 设置console输出颜色
 colors.setTheme({
     error: 'red',
     warn: 'yellow',
@@ -66,10 +67,12 @@ function parseToMailContent(logs) {
         throw new Error('没有待处理的日志内容......');
         return false;
     }
+
     var results = [];
     logs.forEach(function(log, index, logs) {
         // patch的标题
         results.push(log.find('msg').text() + '\n');
+
         // patch的文件路径
         var filePath = log.find('path').map(function(index, ele) {
             var path = $(this).text();
@@ -85,6 +88,7 @@ function parseToMailContent(logs) {
             }
             return path + '\n';
         }).get().join('');
+
         results.push(filePath + '\n');
     });
     return results.join('');
