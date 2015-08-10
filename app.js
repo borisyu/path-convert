@@ -2,20 +2,12 @@ var exec = require('child_process').exec;
 var fs = require('fs');
 var co = require('co');
 var cheerio = require('cheerio');
-var colors = require('colors');
+var chalk = require('chalk');
 var cfg = require('./config');
 var pathReg = cfg.pathReg;
 var replaceTo = cfg.replaceTo;
 var results = [];
 var $ = null;
-
-// 设置console输出颜色
-colors.setTheme({
-    error: 'red',
-    warn: 'yellow',
-    info: 'cyan',
-    success: 'green'
-});
 
 /**
  * 获取SVN日志记录
@@ -111,24 +103,24 @@ function outputPatch(content) {
 
 
 co(function* () {
-    console.log('正在向 SVN 服务器获取日志记录......'.info);
+    console.log( chalk.cyan('正在向 SVN 服务器获取日志记录......') );
     return yield getSvnLog(cfg.command);
 })
 .then(function(content) {
-    console.log('日志获取成功......'.success);
-    console.log('开始处理数据......'.info);
+    console.log( chalk.green('日志获取成功......') );
+    console.log( chalk.cyan('开始处理数据......') );
     $ = toJqueryLike(content);
     var logs = findLogsByUser(cfg.user);
     var commitsCnt = parseToMailContent(logs);
     return Promise.resolve(commitsCnt);
 })
 .then(function(content) {
-    console.log('正在输出邮件内容......'.info);
+    console.log( chalk.cyan('正在输出邮件内容......') );
     outputPatch(content);
 })
 .then(function() {
-    console.log('任务完成！'.success);
+    console.log( chalk.green('任务完成！') );
 })
 .catch(function(err) {
-    console.log(String(err.stack).error);
+    console.log( chalk.red(err.stack) );
 });
